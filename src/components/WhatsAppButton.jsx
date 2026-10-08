@@ -1,15 +1,16 @@
 import { FaWhatsapp } from 'react-icons/fa';
 import { site } from '../data/site.js';
+import { useQuote } from '../contexts/QuoteContext.jsx';
 
-// Numara girilmediyse buton hiç çıkmaz (eski kodda href="#" ile ölü bir butondu).
 export default function WhatsAppButton() {
   const number = site.whatsapp.replace(/\D/g, '');
+  const { count } = useQuote();
   if (!number) return null;
 
   return (
     <a
-      className="whatsapp"
-      href={`https://wa.me/${number}`}
+      className={`whatsapp ${count > 0 ? 'has-quote' : ''}`}
+      href={`https://wa.me/${number}?text=Merhaba, palet teklifi almak istiyorum.`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp ile yazın"
