@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// İç sayfaların üst başlığı: sayfa yolu + büyük başlık, teknik çizim kâğıdı zemini.
-export default function PageHeader({ title }) {
+export default function PageHeader({ title, lead }) {
   return (
     <section className="page-header">
       <div className="container">
@@ -11,6 +10,7 @@ export default function PageHeader({ title }) {
           <span aria-current="page">{title}</span>
         </nav>
         <h1 className="page-header__title">{title}</h1>
+        {lead && <p className="page-header__lead">{lead}</p>}
       </div>
     </section>
   );

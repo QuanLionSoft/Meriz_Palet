@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import TopBar from '../components/TopBar.jsx';
 import Header from '../components/Header.jsx';
 import ContactSection from '../components/ContactSection.jsx';
 import Footer from '../components/Footer.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
+import { QuoteBar, QuoteDrawer } from '../components/QuoteBar.jsx';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -13,17 +15,19 @@ function ScrollToTop() {
   return null;
 }
 
-// Her sayfada tekrar eden ortak iskelet tek yerde.
 export default function MainLayout() {
   return (
     <>
       <ScrollToTop />
+      <TopBar />
       <Header />
       <main>
         <Outlet />
       </main>
       <ContactSection />
       <Footer />
+      <QuoteBar />
+      <QuoteDrawer />
       <WhatsAppButton />
     </>
   );

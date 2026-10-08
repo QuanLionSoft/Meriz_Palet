@@ -1,13 +1,14 @@
 import { faqs } from '../data/site.js';
 
-// <details> ile klavye ve ekran okuyucu uyumlu; gizli checkbox hilesine gerek yok.
 export default function FaqList() {
   return (
     <section className="section container faq">
-      {faqs.map((f) => (
-        <details key={f.q} className="faq__item">
+      {faqs.map((f, idx) => (
+        <details key={f.q} className="faq__item" open={idx === 0}>
           <summary>{f.q}</summary>
-          <p>{f.a}</p>
+          <div className="faq__body">
+            <p>{f.a}</p>
+          </div>
         </details>
       ))}
     </section>

@@ -1,40 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaArrowRight, FaCamera, FaTimes } from 'react-icons/fa';
+import { FaArrowRight, FaCamera, FaTimes, FaShoppingBasket, FaEye } from 'react-icons/fa';
 import { products } from '../data/products.js';
 import PalletDrawing, { parseSize } from './PalletDrawing.jsx';
+import { useQuote } from '../contexts/QuoteContext.jsx';
 
-// Her ürüne ölçü bilgisini ekle (adı "80 X 120 cm ..." biçiminde olanlar için).
 const items = products.map((p) => ({ ...p, ...(parseSize(p.name) ?? { w: null, h: null, label: null, title: p.name }) }));
 
-// Mevcut ölçüler, küçükten büyüğe
-const sizeOptions = [...new Set(items.filter((i) => i.label).sort((a, b) => a.w - b.w || a.h - b.h).map((i) => i.label))];
-
-/** Fotoğraf penceresi: gerçek ürün fotoğrafı sadece istenince yüklenir. */
 function Lightbox({ item, onClose }) {
   const ref = useRef(null);
-
   useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (item && !dialog.open) dialog.showModal();
-    if (!item && dialog.open) dialog.close();
+    const d = ref.current;
+    if (!d) return;
+    if (item && !d.open) d.showModal();
+    if (!item && d.open) d.close();
   }, [item]);
-
   return (
     <dialog
       ref={ref}
       className="lightbox"
       aria-label={item ? item.name : 'Ürün fotoğrafı'}
       onClose={onClose}
-      onClick={(e) => {
-        if (e.target === ref.current) onClose(); // arka plana tıklayınca kapat
-      }}
+      onClick={(e) => e.target === ref.current && onClose()}
     >
       {item && (
         <figure className="lightbox__figure">
           <img src={item.image} alt={item.name} />
-          <figcaption>{item.name}</figcaption>
+          <figcaption>
+            <span>{item.name}</span>
+            <Link to={`/urunler/${item.id}`} className="btn btn--sm" onClick={onClose}>
+              Detay <FaArrowRight />
+            </Link>
+          </figcaption>
         </figure>
       )}
       <button type="button" className="lightbox__close" aria-label="Kapat" onClick={onClose}>
@@ -44,59 +41,68 @@ function Lightbox({ item, onClose }) {
   );
 }
 
-export default function ProductGrid({ limit, heading = 'Ürünlerimiz', filterable = false, showAllLink = false }) {
-  const [size, setSize] = useState('all');
+export default function ProductGrid({ limit, heading = 'Ürünlerimiz', showAllLink = false }) {
   const [selected, setSelected] = useState(null);
+  const { add } = useQuote();
 
   const visible = useMemo(() => {
-    let list = filterable && size !== 'all' ? items.filter((i) => i.label === size) : items;
+    let list = items;
     if (limit) list = list.slice(0, limit);
     return list;
-  }, [filterable, size, limit]);
+  }, [limit]);
 
   return (
     <section className="section container" id="urunlerimiz">
-      <div className="section__head">
-        {heading && (
-          <>
-            <p className="eyebrow">Ürünler</p>
-            <h2 className="section__title">{heading}</h2>
-          </>
-        )}
-        <p className="section__lead">Ürünlerimizin boyutları standarttır. Çizimler şematiktir; ölçüler orantılıdır.</p>
-      </div>
-
-      {filterable && (
-        <div className="filters" role="group" aria-label="Ölçüye göre filtrele">
-          <button type="button" className="filters__btn" aria-pressed={size === 'all'} onClick={() => setSize('all')}>
-            Tümü
-          </button>
-          {sizeOptions.map((s) => (
-            <button key={s} type="button" className="filters__btn" aria-pressed={size === s} onClick={() => setSize(s)}>
-              {s}
-            </button>
-          ))}
+      {heading && (
+        <div className="section__head">
+          <p className="eyebrow">Ürünler</p>
+          <h2 className="section__title">{heading}</h2>
+          <p className="section__lead">16 çeşit standart ve özel ölçü palet. Teknik çizimler orantılıdır, gerçek fotoğraf için fotoğraf butonuna tıklayın.</p>
         </div>
       )}
 
       <ul className="grid">
         {visible.map((p) => (
-          <li key={p.id} className="card reveal">
+          <li key={p.id} className="card">
             <div className="card__art">
-              {p.w ? <PalletDrawing w={p.w} h={p.h} /> : null}
-              {p.label && <span className="chip card__size">{p.label}</span>}
+              <div className="card__badges">
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                  {p.label && <span className="chip">{p.label}</span>}
+                </div>
+                <div className="card__badges-right">
+                  <span className={`chip ${p.stock === 'Stokta' ? 'chip--success' : 'chip--ghost'}`}>{p.stock}</span>
+                  {p.priceNote && <span className="chip chip--amber">{p.priceNote}</span>}
+                </div>
+              </div>
+              {p.w ? <PalletDrawing w={p.w} h={p.h} /> : <img src={p.image} alt={p.name} style={{ width: '70%', aspectRatio: '1', objectFit: 'contain' }} />}
             </div>
             <div className="card__body">
+              <div className="card__sku">
+                {p.sku} • {p.category.toUpperCase()}
+              </div>
               <h3 className="card__title">{p.title}</h3>
-              <div className="card__actions">
-                <a className="card__link" href="#iletisim" aria-label={`${p.name} hakkında bilgi al`}>
-                  Bilgi al <FaArrowRight aria-hidden="true" />
-                </a>
-                {p.image && (
-                  <button type="button" className="card__photo" onClick={() => setSelected(p)}>
-                    <FaCamera aria-hidden="true" /> Fotoğraf
+              <div className="card__specs">
+                <span className="card__spec">{p.specs.kapasite.split(' ')[0]} kapasite</span>
+                <span className="card__spec">{p.specs.takoz}</span>
+                <span className="card__spec">{p.specs.agirlik}</span>
+              </div>
+              <div className="card__footer">
+                <div className="card__price">
+                  <strong>
+                    {p.specs.en}×{p.specs.boy} cm
+                  </strong>
+                </div>
+                <div className="card__actions">
+                  <button type="button" className="card__action" aria-label="Fotoğrafı gör" onClick={() => setSelected(p)}>
+                    <FaCamera />
                   </button>
-                )}
+                  <Link to={`/urunler/${p.id}`} className="card__action" aria-label="Detayı gör">
+                    <FaEye />
+                  </Link>
+                  <button type="button" className="card__action card__action--primary" aria-label="Teklif sepetine ekle" onClick={() => add(p, 1)}>
+                    <FaShoppingBasket />
+                  </button>
+                </div>
               </div>
             </div>
           </li>
@@ -106,7 +112,7 @@ export default function ProductGrid({ limit, heading = 'Ürünlerimiz', filterab
       {showAllLink && (
         <p className="center">
           <Link className="btn btn--ghost" to="/urunler">
-            Tüm ürünleri gör
+            Tüm ürünleri gör <FaArrowRight />
           </Link>
         </p>
       )}

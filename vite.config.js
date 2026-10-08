@@ -3,5 +3,16 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  build: { outDir: 'build' }, // CRA ile aynı klasör: mevcut deploy ayarın bozulmaz
+  build: { outDir: 'build' },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    hmr: { clientPort: 443 },
+    cors: true,
+    allowedHosts: true,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
 });
